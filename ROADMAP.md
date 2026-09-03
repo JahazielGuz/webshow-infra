@@ -53,3 +53,23 @@ docker compose up -d      # Postgres, Redis, RabbitMQ
 | Postgres + pgvector | Neon |
 
 Target running cost: under $30/month.
+
+## Maturity levels
+
+Every ticket carries a level label. The level is orthogonal to the slice: a slice cuts
+*vertically* through the stack, a level says *how far* that cut is taken. The same
+capability is revisited at higher levels as the system matures — the catalogue endpoint
+is built at L1, cached and indexed at L3, and instrumented and cost-tracked at L4.
+
+| Label | Question it answers | Representative work |
+| --- | --- | --- |
+| `level:1-foundations` | Does it work correctly? | Domain models, first working path, happy-path endpoints |
+| `level:2-production` | Does it survive reality? | Deploys, migrations, secrets, CI, error paths, health checks |
+| `level:3-scale` | Does it hold under load? | Async processing, caching, indexing, retrieval quality |
+| `level:4-platform` | Is it governable? | Observability, evals, cost control, contracts others depend on |
+
+Filter the board by level to see the ladder rather than the chronology:
+
+```bash
+gh issue list --label "level:3-scale"
+```
