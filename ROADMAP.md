@@ -1,16 +1,16 @@
 # webshow — Roadmap
 
 Built as **vertical slices**, not horizontal layers. Every slice ships backend *and* frontend
-together and ends deployed, so there is always something live to look at. Auth deliberately
-comes after the catalogue is visible — invisible plumbing does not come first.
+together, so interface work grows with the system rather than arriving in one block. Auth
+deliberately comes after the catalogue is visible — invisible plumbing does not come first.
 
 Three slices (6, 9, 11) have no visible output. They are marked, so a demo-less week is never
 a surprise.
 
 | # | Slice | Backend | Frontend added | Result |
 | --- | --- | --- | --- | --- |
-| 0 | Walking skeleton | `/health`, Dockerfile, CI | one page calling the API | **a live URL** |
-| 1 | Catalogue | Prisma, `Movie`, TMDB seed | poster grid, detail page | it looks like a product |
+| 0 | Catalogue on screen | Postgres, Prisma, layered API, TMDB seed | home page, genre rows | **movies on a page** |
+| 1 | Containerise & deploy | Dockerfile, Neon, Fly.io, CI | *(goes live)* | **a live URL** |
 | 2 | Search & browse | Postgres FTS + `pg_trgm` | search bar, genre filters | a usable catalogue |
 | 3 | Auth | argon2, `jose` EdDSA + JWKS | register / login, session header | accounts |
 | 4 | Ratings & history | `Rating`, `WatchEvent` | star widget, Continue Watching | it remembers you |
@@ -25,13 +25,22 @@ a surprise.
 
 ## Why this order
 
-**Deploy on day one.** Slice 0 is a walking skeleton — a thin end-to-end slice through every
-layer, deployed. Deployment is never a cliff at the end of the project; every subsequent change
-simply ships.
+**Something worth looking at comes first.** Slices 0 and 1 were originally the other way round —
+a deployed `/health` endpoint before any catalogue. That is the textbook walking skeleton, and it
+was swapped deliberately.
+
+The textbook argument for deploying first is real: the first deploy always surfaces surprises
+(port binding, environment variables, build context, database reachability), and meeting them one
+at a time beats meeting them all at once. The cost of deferring is that slice 1 now carries more
+moving parts, so a failure there has more candidate causes.
+
+It was still the right call. A live URL serving `{"status":"ok"}` proves the pipeline works and
+demonstrates nothing. Two days of deferral is a scheduling choice, not an architectural one —
+nothing in slice 0 is harder to containerise for having been written first.
 
 **Slice 7 delivers AI early.** *More Like This* is item-to-item similarity: it needs a movie's
-vector but no user profile. That means a working AI feature exists well before any
-personalisation machinery does.
+vector but no user profile. A working AI feature therefore exists well before any personalisation
+machinery does.
 
 **Frontend is a dimension, not a phase.** Interface work grows with each slice rather than
 arriving in one block.
@@ -41,8 +50,12 @@ arriving in one block.
 Prerequisites: Docker, Node 22+, `uv`, `gh`.
 
 ```bash
-docker compose up -d      # Postgres, Redis, RabbitMQ
+docker compose up -d      # Postgres only, for now
 ```
+
+Docker currently runs the database and nothing else. The services themselves run on the host
+via `npm run dev`; containerising them is slice 1. Redis and RabbitMQ join the compose file in
+slice 6, when there is asynchronous work for them to do.
 
 ## Deployment
 
