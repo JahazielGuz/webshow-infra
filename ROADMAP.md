@@ -38,6 +38,12 @@ It was still the right call. A live URL serving `{"status":"ok"}` proves the pip
 demonstrates nothing. Two days of deferral is a scheduling choice, not an architectural one —
 nothing in slice 0 is harder to containerise for having been written first.
 
+**Accounts moved ahead of the deploy** (2026-09-17). The order actually taken is 0, then 3, then 1:
+with the catalogue on screen, accounts are the next thing that makes it feel like a product, and
+everything after them (ratings, history, tiers) needs a user to hang off. Deferring the deploy costs
+one extra secret to provision when it happens, the token signing key, and no rework: nothing in the
+auth slice is harder to containerise for having been written first.
+
 **Slice 7 delivers AI early.** *More Like This* is item-to-item similarity: it needs a movie's
 vector but no user profile. A working AI feature therefore exists well before any personalisation
 machinery does.
