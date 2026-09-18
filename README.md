@@ -48,7 +48,7 @@ slice 6, when domain events first have somewhere to go.
 | Infrastructure | Holds | Declared in | In production | Arrives |
 | --- | --- | --- | --- | --- |
 | Postgres | catalogue, users, ratings, watch history | `webshow-core` | Neon | **slice 0** |
-| Postgres | user profile vectors *(derived)* | `recs-service` | Neon | slice 7 |
+| Postgres | movie vectors *(derived)*, then user profile vectors | `recs-service` | Neon | slice 7, slice 8 |
 | Postgres | content index *(derived)* | `discovery-service` | Neon | slice 10 |
 | Redis | cache, job state | undecided | Upstash | slice 6 |
 | RabbitMQ | cross-service domain events | undecided | CloudAMQP | slice 6 |

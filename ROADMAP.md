@@ -44,6 +44,12 @@ everything after them (ratings, history, tiers) needs a user to hang off. Deferr
 one extra secret to provision when it happens, the token signing key, and no rework: nothing in the
 auth slice is harder to containerise for having been written first.
 
+**Similar titles moved ahead of the deploy and the event bus** (2026-09-17). The order actually taken is
+0, 3, 7, then 1. Two consequences, both deliberate. `recs-service` has no domain events to consume yet, so its
+ingest **reads the catalogue over webshow-core's public API** instead; the property that matters, that its data
+is derived and rebuildable from the system of record, holds either way, and the consumer swaps in at slice 6.
+And the first deploy will carry three services rather than one.
+
 **Slice 7 delivers AI early.** *More Like This* is item-to-item similarity: it needs a movie's
 vector but no user profile. A working AI feature therefore exists well before any personalisation
 machinery does.
