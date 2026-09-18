@@ -16,10 +16,10 @@ a surprise.
 | 4 | Ratings & history | `Rating`, `WatchEvent` | star widget, Continue Watching | it remembers you |
 | 5 | Subscription tiers | tier gating middleware | pricing page, upgrade flow | it feels like a product |
 | 6 | Async infrastructure | compose, Redis, RabbitMQ, contracts | *(none)* | — |
-| 7 | Similar titles | recs-service, pgvector, ingest | More Like This | **first visible AI** |
+| 7 | Similar titles | recommendations-service, pgvector, ingest | More Like This | **first visible AI** |
 | 8 | Personalisation | user vectors, nearline consumer | Top Picks For You | it learns from you |
 | 9 | LLM gateway | OpenAI-compatible proxy, metering | *(none)* | — |
-| 10 | Agentic search | discovery-service, LangGraph CRAG | natural-language search | the headline feature |
+| 10 | Agentic search | LangGraph CRAG, in recommendations-service | natural-language search | the headline feature |
 | 11 | Evaluation | golden datasets, LangSmith, CI gate | *(none)* | measurable quality |
 | 12 | Hardening | OpenTelemetry, cost dashboards | architecture page | production readiness |
 
@@ -45,7 +45,7 @@ one extra secret to provision when it happens, the token signing key, and no rew
 auth slice is harder to containerise for having been written first.
 
 **Similar titles moved ahead of the deploy and the event bus** (2026-09-17). The order actually taken is
-0, 3, 7, then 1. Two consequences, both deliberate. `recs-service` has no domain events to consume yet, so its
+0, 3, 7, then 1. Two consequences, both deliberate. `recommendations-service` has no domain events to consume yet, so its
 ingest **reads the catalogue over webshow-core's public API** instead; the property that matters, that its data
 is derived and rebuildable from the system of record, holds either way, and the consumer swaps in at slice 6.
 And the first deploy will carry three services rather than one.

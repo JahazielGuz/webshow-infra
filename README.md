@@ -14,8 +14,7 @@ Nothing here runs and nothing deploys from here. Each service lives in its own r
 | --- | --- | --- |
 | `webshow-core` | Node + Express + Prisma | System of record: users, catalog, ratings, watch history, subscriptions |
 | `webshow-web` | Next.js | Frontend |
-| `recs-service` | Python + FastAPI | Embedding-based recommendations (pgvector) |
-| `discovery-service` | Python + FastAPI + LangGraph | Natural-language search over a RAG pipeline |
+| `recommendations-service` | Python + FastAPI + LangGraph | Retrieval: embedding-based recommendations and natural-language search over one pgvector index |
 | `llm-gateway` | Node | OpenAI-compatible proxy: provider keys, per-service token accounting, caching, fallback |
 | `webshow-contracts` | JSON Schema | Versioned event and JWT claim contracts shared across services |
 
@@ -27,7 +26,7 @@ they can be rebuilt from scratch by replaying events.
 
 **The rule: ownership follows the data.** Whichever repository owns a piece of data owns the
 thing that stores it, and declares it in its own `docker-compose.yml`. `webshow-core` owns the
-catalogue, so core's compose file runs the Postgres holding it. `recs-service` owns its vectors,
+catalogue, so core's compose file runs the Postgres holding it. `recommendations-service` owns its vectors,
 so it will run its own. The practical test is that any service can be cloned and started on its
 own — a service you cannot run without also cloning a second repository is a worse service.
 
@@ -48,8 +47,7 @@ slice 6, when domain events first have somewhere to go.
 | Infrastructure | Holds | Declared in | In production | Arrives |
 | --- | --- | --- | --- | --- |
 | Postgres | catalogue, users, ratings, watch history | `webshow-core` | Neon | **slice 0** |
-| Postgres | movie vectors *(derived)*, then user profile vectors | `recs-service` | Neon | slice 7, slice 8 |
-| Postgres | content index *(derived)* | `discovery-service` | Neon | slice 10 |
+| Postgres | movie vectors, user profile vectors, content index, all *(derived)* | `recommendations-service` | Neon | slices 7, 8, 10 |
 | Redis | cache, job state | undecided | Upstash | slice 6 |
 | RabbitMQ | cross-service domain events | undecided | CloudAMQP | slice 6 |
 
@@ -68,6 +66,15 @@ No shared secret means no service can forge a token it was only meant to validat
 once at ingest. At request time the system performs an approximate-nearest-neighbour lookup
 and a language model only reranks the resulting shortlist. This is the standard
 retrieve-then-rerank cascade.
+
+**One retrieval service, not two.** Recommendation and natural-language search were planned as separate
+services, and were merged before either was built (2026-09-17). They embed the same catalogue and query the
+same vectors, so the split meant embedding everything twice, running two databases, and deploying twice to
+keep one index warm. What the merge costs is a shared failure domain and two very different cost profiles in
+one process: a search request spends money on model calls while a similarity lookup spends nothing. That line
+now has to be drawn *inside* the service, with its own budget and rate limits per entry point, rather than
+around it. If search traffic ever needs to scale or fail separately from recommendations, splitting it back
+out is a deployment change, not a rewrite, because the two already sit behind different endpoints.
 
 **Retrieval is hybrid.** Lexical search (Postgres full-text + trigram) and semantic search
 (pgvector) are fused with Reciprocal Rank Fusion, keeping a single datastore rather than
